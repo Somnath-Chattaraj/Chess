@@ -50,7 +50,9 @@ export const Game = () => {
                 </div>
                 <div className='col-span-2 bg-slate-900 w-full flex justify-center'>
                     <div className='pt-8'>
-                        <Button onClick={() => socket.send(JSON.stringify({type: INIT_GAME}))}>Play</Button>
+                        <button className='px-8 py-4 text-2xl bg-green-500 hover:bg-green-700 text-white font-bold rounded'
+                            onClick={() => socket.send(JSON.stringify({type: INIT_GAME}))}
+                        >Play</button>
                     </div>
                 </div>
             </div>
