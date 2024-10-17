@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useSocket } from '../hook/useSocket';
 import ChessBoard from '../components/ChessBoard';
-import { Button } from '../components/Button';
 import { Chess } from 'chess.js';
 
 export const INIT_GAME = "init_game";
@@ -12,6 +11,7 @@ export const Game = () => {
     const socket = useSocket();
     const [chess , setChess] = useState(new Chess());
     const [board, setBoard] = useState(chess.board());
+    const [started, setStarted] = useState(false); 
 
     useEffect(() => {
         if (!socket) {
@@ -22,8 +22,8 @@ export const Game = () => {
             console.log(message);
             switch (message.type) {
                 case INIT_GAME:
-                    setChess(new Chess());
                     setBoard(chess.board());
+                    setStarted(true);
                     console.log("Game is starting");
                     break;
                 case MOVE:
@@ -38,7 +38,7 @@ export const Game = () => {
                     break;
             }
         }
-    })
+    },[socket])
     if (!socket) return <div>Connecting...</div>
 
   return (
@@ -46,13 +46,13 @@ export const Game = () => {
         <div className='pt-8 max-w-screen-lg w-full'>
             <div className='grid grid-cols-6 gap-4 w-ful'>
                 <div className='col-span-4 w-full flex justify-content'>
-                    <ChessBoard socket={socket} board={board} />
+                    <ChessBoard chess={chess} setBoard={setBoard} socket={socket} board={board} />
                 </div>
                 <div className='col-span-2 bg-slate-900 w-full flex justify-center'>
                     <div className='pt-8'>
-                        <button className='px-8 py-4 text-2xl bg-green-500 hover:bg-green-700 text-white font-bold rounded'
+                        {!started && <button className='px-8 py-4 text-2xl bg-green-500 hover:bg-green-700 text-white font-bold rounded'
                             onClick={() => socket.send(JSON.stringify({type: INIT_GAME}))}
-                        >Play</button>
+                        >Play</button>}
                     </div>
                 </div>
             </div>
