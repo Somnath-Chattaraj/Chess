@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes, BrowserRouter } from 'react-router-dom';
+import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import Landing from './screens/Landing';
 import {Game} from './screens/Game';
 import './App.css';
