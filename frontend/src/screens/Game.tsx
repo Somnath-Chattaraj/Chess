@@ -9,6 +9,7 @@ export const GAME_OVER = "game_move";
 
 export const Game = () => {
     const socket = useSocket();
+    // @ts-ignore
     const [chess , setChess] = useState(new Chess());
     const [board, setBoard] = useState(chess.board());
     const [started, setStarted] = useState(false); 

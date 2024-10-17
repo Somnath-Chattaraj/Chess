@@ -12,7 +12,7 @@ const ChessBoard = ({chess, setBoard , board, socket} : {
     socket: WebSocket;
 }) => {
     const [from, setFrom] = useState<null| Square>(null)
-    const [to, setTo] = useState(null)
+    // const [to, setTo] = useState(null)
   return (
     <div className='text-white-200'>
         {board.map((row, i) => {
