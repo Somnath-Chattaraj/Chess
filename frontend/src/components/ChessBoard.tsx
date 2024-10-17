@@ -43,7 +43,9 @@ const ChessBoard = ({chess, setBoard , board, socket} : {
                             }} className={`w-16 h-16 ${(i+j)%2 == 0 ? 'bg-green-700' : 'bg-green-300'}`}>
                                 <div className='w-full h-full flex justify-center'>
                                     <div className='h-full flex justify-center flex-col'>
-                                        {square ? square.type : ""}
+                                        {square ? 
+                                        <img src={`/${square?.color === "b" ? square?.type : `${square?.type?.toUpperCase()} copy`}.png`} className='w-10' alt="" />
+                                        : null}
                                     </div>
                                 </div>
                             </div>
