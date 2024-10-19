@@ -6,13 +6,14 @@ import "dotenv/config";
 
 
 const app = express();
-
-app.use(cors(
-    {
-        origin: "http://localhost:3000",
-        credentials: true,
-    }
-));
+const corsOptions = {
+    origin: [
+      "http://localhost:3001",
+      "http://localhost:5173"
+    ],
+    credentials: true,
+  };
+app.use(cors(corsOptions));
 app.use(cookieParser());
 
 app.get("/api/v1", (req: Request, res: Response) => {
