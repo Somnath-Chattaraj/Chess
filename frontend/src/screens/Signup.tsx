@@ -18,14 +18,16 @@ import Navbar from "@/Elements/Navbar";
 
 const formSchema = z.object({
   username: z.string().min(2, { message: "Username must be at least 2 characters." }),
+  email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
-export const Login = () => {
+export const Signup = () => {
   const form = useForm({
     resolver: zodResolver(formSchema), 
     defaultValues: {
       username: "",
+      email: "",
       password: "",
     },
   });
@@ -36,14 +38,14 @@ export const Login = () => {
 
   return (
     <>
-                <Navbar btnName="Signup" navigateUrl={'/signup'} display={true} loadingUsr={false}/>
+                <Navbar btnName="Login" navigateUrl={'/login'} display={true} loadingUsr={false}/>
     <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-800 to-gray-900">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-6 border border-gray-700 px-10 py-8 rounded-lg shadow-lg max-w-md w-full bg-gray-800"
         >
-          <h1 className="text-3xl font-bold text-white text-center">Login</h1>
+          <h1 className="text-3xl font-bold text-white text-center">Signup</h1>
 
           <FormField
             control={form.control}
@@ -60,7 +62,19 @@ export const Login = () => {
           />
 
 
-          
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-white">Email</FormLabel>
+                <FormControl>
+                  <Input className="text-white" placeholder="Enter email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
 
           <FormField
