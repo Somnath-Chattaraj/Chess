@@ -4,6 +4,7 @@ import ChessBoard from '../Elements/ChessBoard';
 import { Chess } from 'chess.js';
 import { Button } from '@/components/ui/button'; 
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'; 
+import Navbar from '@/Elements/Navbar';
 
 export const INIT_GAME = "init_game";
 export const MOVE = "move";
@@ -43,6 +44,8 @@ export const Game = () => {
     if (!socket) return <div>Connecting...</div>;
 
     return (
+        <>
+        <Navbar btnName="Login" navigateUrl={'/login'} display={true} loadingUsr={false}/>
         <div className="flex justify-center py-12 min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
             <div className="max-w-screen-lg w-full px-4 md:px-6">
                 {/* Adjust grid layout for different screen sizes */}
@@ -89,5 +92,6 @@ export const Game = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };

@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Colour {
+  WHITE
+  BLACK
+}
+model User {
+  userId   String   @id @default(cuid())
+  username String   @unique
+  email    String   @unique
+  password String
+
+  games    Games[]  @relation("UserGames")
+  moves    Moves[]  @relation("UserMoves")
+}
+
+model Games {
+  gamesId   String   @id @default(cuid())
+  userId    String
+  moves     String
+  startTime DateTime
+  endTime   DateTime
+  colour    Colour
+  user      User     @relation("UserGames", fields: [userId], references: [userId], onDelete: Cascade)
+  movesList Moves[]  @relation("GameMoves")
+}
+
+model Moves {
+  moveId   String   @id @default(cuid())
+  from     String
+  to       String
+  userId   String
+  gamesId  String
+
+  user     User     @relation("UserMoves", fields: [userId], references: [userId], onDelete: Cascade)
+  game     Games    @relation("GameMoves", fields: [gamesId], references: [gamesId], onDelete: Cascade)
+}
