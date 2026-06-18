@@ -1,0 +1,24 @@
+{
+  "name": "chess-club",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test -w backend",
+    "dev:api": "npm run dev -w backend",
+    "dev:web": "npm run dev -w frontend",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:smoke": "node scripts/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
