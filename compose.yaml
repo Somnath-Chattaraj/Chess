@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: chess
+      POSTGRES_DB: chess
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U chess -d chess']
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+    stop_grace_period: 30s
+  api:
+    build:
+      context: .
+      target: api
+    environment:
+      DATABASE_URL: postgres://chess:${DB_PASSWORD}@db:5432/chess
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    init: true
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    stop_grace_period: 15s
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:8080'
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+volumes:
+  postgres_data:
