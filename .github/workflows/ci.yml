@@ -1,0 +1,23 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: docker build --target api -t chess-api .
+      - run: docker build --target web -t chess-web .
+      - run: |
+          cp .env.example .env
+          docker compose up -d --wait --wait-timeout 180
+          curl --fail http://localhost:8080/api/health
+          SMOKE_RESTART=true npm run test:smoke
+      - if: always()
+        run: docker compose logs && docker compose down -v
