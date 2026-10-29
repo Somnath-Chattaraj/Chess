@@ -1,4 +1,5 @@
 import express from 'express';
+import { serveFrontend } from './frontend.js';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { compare, hash } from 'bcryptjs';
@@ -26,7 +27,7 @@ const signup = credentials.extend({
     .max(254)
     .transform((s) => s.toLowerCase()),
 });
-export function createApp(db: Database, origin: string, secure: boolean) {
+export function createApp(db: Database, origin: string, secure: boolean, staticDirectory?: string) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -34,6 +35,13 @@ export function createApp(db: Database, origin: string, secure: boolean) {
   app.use(cookieParser());
   app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'same-origin');
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    );
     if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin !== origin) {
       res.status(403).json({ message: 'Request origin is not allowed.' });
       return;
@@ -141,6 +149,7 @@ export function createApp(db: Database, origin: string, secure: boolean) {
     );
     res.json({ games: rows.map((r) => r.data) });
   });
+  if (staticDirectory) serveFrontend(app, staticDirectory);
   app.use((_req, res) => res.status(404).json({ message: 'Endpoint not found.' }));
   app.use(
     (error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

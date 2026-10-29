@@ -3,14 +3,15 @@ import { WebSocketServer } from 'ws';
 import { createApp, getUser } from './app.js';
 import { connectDatabase, schema } from './db.js';
 import { Manager } from './manager.js';
+import { resolveOrigin } from './config.js';
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required. See .env.example.');
-const origin = process.env.APP_ORIGIN ?? 'http://localhost:5173';
+const origin = resolveOrigin();
 const db = connectDatabase();
 await db.query(schema);
 await db.query('DELETE FROM club_sessions WHERE expires_at<now()');
 const manager = new Manager(db);
 await manager.restore();
-const app = createApp(db, origin, process.env.COOKIE_SECURE === 'true');
+const app = createApp(db, origin, process.env.COOKIE_SECURE === 'true', process.env.STATIC_DIR);
 const server = createServer(app);
 const wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
 server.on('upgrade', async (req, socket, head) => {

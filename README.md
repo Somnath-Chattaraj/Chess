@@ -4,6 +4,27 @@ A browser chess application for live games and local two-player games. React ren
 
 ![Chess Club playing interface](docs/preview.png)
 
+## Deploy to Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Somnath-Chattaraj/Chess)
+
+The button opens a review screen in your Render account. It creates one Docker web service and one managed PostgreSQL database in Singapore. The React build, HTTP API, and WebSocket endpoint share the same web service and public URL. No separate Nginx service or hostname wiring is required.
+
+1. Click **Deploy to Render** and sign in. Select the workspace where you want the application to run.
+2. Review the paid resources declared in `render.yaml`: a `0.5c-512mb` web service and a `0.1c-256mb` Postgres database with 1 GB storage. Render's currently published base compute prices are $7/month and $6/month respectively; taxes, usage overages, and any existing paid workspace plan are additional. Check the dashboard's current quote before approving.
+3. Approve the Blueprint and wait until both resources are ready. The database URL is wired automatically. `RENDER_EXTERNAL_URL` supplies the allowed public origin, and secure session cookies are enabled.
+4. Open the web service's HTTPS URL. Check `/api/health`, then create two accounts in different browser sessions to test a private game.
+
+`render.yaml` is the deployment definition; `deploy/Dockerfile.render` builds the combined web service. The original Docker Compose deployment remains available for servers and local use. The Blueprint restricts external database connections and leaves automatic deployments off. To update after a GitHub push, use **Manual Deploy → Deploy latest commit** in Render.
+
+Keep one running web-service instance. Schedule redeploys between games: live game coordination is process-local, and rolling deployments can briefly overlap old and new processes. Do not treat deployments as safe mid-match migrations. The restart smoke test verifies recovery after a stopped process, rather than simultaneous process ownership.
+
+For a custom domain, add it in Render, then set `APP_ORIGIN=https://chess.your-domain.com` and redeploy. The custom value takes precedence over Render's default hostname. Do not include a path. The automatic `onrender.com` origin requires no manual environment setup.
+
+Free plans are suitable only for a temporary preview: the web service sleeps when idle and free Postgres expires after 30 days. The checked-in Blueprint uses paid plans for an ongoing installation. Resource creation and billing happen in your Render account only after approval. No persistent application disk, Redis service, or separately purchased TLS certificate is needed.
+
+References: [Render Blueprint settings](https://render.com/docs/blueprint-spec), [deploy button](https://render.com/docs/deploy-to-render), [pricing](https://render.com/pricing), [free-plan limits](https://render.com/docs/free).
+
 ## Run with Docker
 
 Requires Docker Engine/Desktop and the Compose v2 plugin. No host Node.js or PostgreSQL installation is needed.
@@ -149,12 +170,16 @@ backend/src/game.ts      Chess rules, clocks, game snapshots and terminal result
 backend/src/manager.ts   Matchmaking, private rooms, socket commands and persistence
 backend/src/db.ts        PostgreSQL connection and initial schema
 backend/src/index.ts     Startup, authenticated WebSocket upgrades and shutdown
+backend/src/config.ts    Render/public-origin configuration
+backend/src/frontend.ts  Optional same-origin static UI hosting
 backend/test/            Rules and database-backed integration tests
 frontend/src/App.tsx     Playing interface, local mode, account dialogs and archive
 frontend/src/index.css   Responsive layout and visual system
 deploy/nginx.conf        Production static hosting and same-origin proxy
 Dockerfile               Shared build stage; API and web runtime targets
 compose.yaml             Deployment services, readiness checks and persistent volume
+render.yaml              Render web service and managed database Blueprint
+deploy/Dockerfile.render Combined frontend/API image for Render
 ```
 
 ### HTTP and WebSocket contract
