@@ -4,3 +4,7 @@ dist/
 *.tsbuildinfo
 .DS_Store
 coverage/
+
+# Runtime certificates and private keys belong in hosting secret storage.
+*.pem
+*.key

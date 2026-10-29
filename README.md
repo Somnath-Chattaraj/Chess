@@ -8,10 +8,10 @@ A browser chess application for live games and local two-player games. React ren
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Somnath-Chattaraj/Chess)
 
-The button opens a review screen in your Render account. It creates one Docker web service and one managed PostgreSQL database in Singapore. The React build, HTTP API, and WebSocket endpoint share the same web service and public URL. No separate Nginx service or hostname wiring is required.
+The button opens a review screen in your Render account. It creates one **free** Docker web service and one **free** managed PostgreSQL database in Singapore for a temporary preview. The React build, HTTP API, and WebSocket endpoint share the same web service and public URL. No separate Nginx service or hostname wiring is required.
 
 1. Click **Deploy to Render** and sign in. Select the workspace where you want the application to run.
-2. Review the paid resources declared in `render.yaml`: a `0.5c-512mb` web service and a `0.1c-256mb` Postgres database with 1 GB storage. Render's currently published base compute prices are $7/month and $6/month respectively; taxes, usage overages, and any existing paid workspace plan are additional. Check the dashboard's current quote before approving.
+2. Review the resources declared in `render.yaml` and confirm that both compute plans are **Free**. Free Postgres expires after **30 days**. The web service sleeps after inactivity, so the first visit may take about a minute to wake it.
 3. Approve the Blueprint and wait until both resources are ready. The database URL is wired automatically. `RENDER_EXTERNAL_URL` supplies the allowed public origin, and secure session cookies are enabled.
 4. Open the web service's HTTPS URL. Check `/api/health`, then create two accounts in different browser sessions to test a private game.
 
@@ -21,9 +21,24 @@ Keep one running web-service instance. Schedule redeploys between games: live ga
 
 For a custom domain, add it in Render, then set `APP_ORIGIN=https://chess.your-domain.com` and redeploy. The custom value takes precedence over Render's default hostname. Do not include a path. The automatic `onrender.com` origin requires no manual environment setup.
 
-Free plans are suitable only for a temporary preview: the web service sleeps when idle and free Postgres expires after 30 days. The checked-in Blueprint uses paid plans for an ongoing installation. Resource creation and billing happen in your Render account only after approval. No persistent application disk, Redis service, or separately purchased TLS certificate is needed.
+Free plans are suitable only for a temporary preview: the web service sleeps when idle and free Postgres expires after 30 days. `render.yaml` uses free plans. For an ongoing paid installation, select `render.production.yaml` as the Blueprint path instead; its small web service and Postgres plans currently have a combined base compute price of $13/month, before taxes, usage overages, and any existing paid workspace subscription. Review Render’s quote before choosing that configuration. Resource creation and billing happen in your Render account only after approval. No persistent application disk, Redis service, or separately purchased TLS certificate is needed.
 
 References: [Render Blueprint settings](https://render.com/docs/blueprint-spec), [deploy button](https://render.com/docs/deploy-to-render), [pricing](https://render.com/pricing), [free-plan limits](https://render.com/docs/free).
+
+### External PostgreSQL on Aiven
+
+Aiven PostgreSQL uses a project CA that Node does not trust automatically. A deployment can build successfully and then fail at startup with `SELF_SIGNED_CERT_IN_CHAIN` until the CA is configured. Changing `sslmode` alone does not install that CA.
+
+1. In Aiven, open your PostgreSQL service’s **Overview → Connection information → CA Certificate → Download**. Download the CA certificate, not a private key.
+2. In your Render **web service**, add a **Secret File** named `aiven-ca.pem` containing the downloaded PEM certificate (including its BEGIN/END lines). Render mounts it at `/etc/secrets/aiven-ca.pem`.
+3. Set `DATABASE_SSL_CA_FILE=/etc/secrets/aiven-ca.pem`. Keep `DATABASE_URL` set to Aiven’s PostgreSQL connection URL. The app accepts the existing `?sslmode=require` suffix and supplies its own verified TLS configuration when this CA setting is present.
+4. Save and redeploy. Keep the health check at `/api/health`.
+
+Alternatively set `DATABASE_SSL_CA` to the certificate PEM itself, using actual line breaks or literal `\n` separators. Use one CA setting, not both. When a provider rotates its CA, replace the certificate bundle and redeploy. Do not commit the certificate or credentials.
+
+The application keeps certificate-chain and hostname verification enabled. It removes conflicting SSL query parameters before giving the explicit CA to node-postgres, because URL SSL options otherwise overwrite the configured CA. URL-based client certificates must be configured separately rather than mixed with these CA environment settings. Render’s internal PostgreSQL URLs and local Compose connections need no new CA setting.
+
+References: [Aiven CA certificates](https://aiven.io/docs/platform/concepts/tls-ssl-certificates), [node-postgres SSL configuration](https://node-postgres.com/features/ssl).
 
 ## Run with Docker
 
@@ -213,6 +228,8 @@ Connect an authenticated WebSocket to `/ws` with the same allowed origin. Client
 The server accepts minutes `3`, `5`, or `10` and increments `0`, `2`, or `5`; matchmaking requires both to match. Replies are `ready`, `queued`, `state` (with a full `game` snapshot), or `error` (with a `message`). Snapshots carry server clock timestamps; clients interpolate them for display. WebSocket payloads are limited to 4 KiB and 50 messages per 10 seconds per connection. Account endpoints permit 30 attempts per IP per 15 minutes. These process-local limits reset on restart.
 
 ## Troubleshooting
+
+- **`SELF_SIGNED_CERT_IN_CHAIN` on Aiven:** upload Aiven’s CA certificate as a Render secret file and set `DATABASE_SSL_CA_FILE=/etc/secrets/aiven-ca.pem` as described above. Rebuild success does not verify the runtime database connection.
 
 - **403 on login or WebSocket handshake:** check that the browser's exact origin matches `APP_ORIGIN`. `localhost` and `127.0.0.1` are different origins.
 - **Login succeeds but the session disappears:** `COOKIE_SECURE=true` requires HTTPS. Use `false` only for local HTTP development.

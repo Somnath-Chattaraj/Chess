@@ -1,0 +1,32 @@
+# Creates paid resources only after you approve the Blueprint in your Render account.
+services:
+  - type: web
+    name: somnath-chess-club
+    runtime: docker
+    region: singapore
+    plan: 0.5c-512mb
+    numInstances: 1
+    dockerfilePath: ./deploy/Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: somnath-chess-db
+          property: connectionString
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: PORT
+        value: '10000'
+
+databases:
+  - name: somnath-chess-db
+    region: singapore
+    plan: 0.1c-256mb
+    diskSizeGB: 1
+    postgresMajorVersion: '17'
+    databaseName: chess
+    user: chess
+    ipAllowList: []

@@ -1,10 +1,10 @@
-# Creates paid resources only after you approve the Blueprint in your Render account.
+# Free temporary preview. The web service sleeps when idle; Postgres expires after 30 days.
 services:
   - type: web
-    name: somnath-chess-club
+    name: somnath-chess-preview
     runtime: docker
     region: singapore
-    plan: 0.5c-512mb
+    plan: free
     numInstances: 1
     dockerfilePath: ./deploy/Dockerfile.render
     dockerContext: .
@@ -14,7 +14,7 @@ services:
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: somnath-chess-db
+          name: somnath-chess-preview-db
           property: connectionString
       - key: COOKIE_SECURE
         value: 'true'
@@ -22,11 +22,8 @@ services:
         value: '10000'
 
 databases:
-  - name: somnath-chess-db
+  - name: somnath-chess-preview-db
     region: singapore
-    plan: 0.1c-256mb
-    diskSizeGB: 1
+    plan: free
     postgresMajorVersion: '17'
-    databaseName: chess
-    user: chess
     ipAllowList: []

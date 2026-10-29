@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { databaseConfig } from './database-config.js';
 export interface Database {
   query(text: string, values?: any[]): Promise<{ rows: any[]; rowCount?: number | null }>;
 }
@@ -20,5 +21,5 @@ CREATE INDEX IF NOT EXISTS club_games_players ON club_games(white_id, black_id);
 CREATE INDEX IF NOT EXISTS club_sessions_expiry ON club_sessions(expires_at);
 `;
 export function connectDatabase() {
-  return new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+  return new pg.Pool(databaseConfig());
 }
